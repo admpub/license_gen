@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dewaka/license_gen/lib"
+	"github.com/admpub/license_gen/lib"
 )
 
 var (

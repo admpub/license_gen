@@ -6,8 +6,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/dewaka/license_gen/lib"
+	"github.com/admpub/license_gen/lib"
 )
+
+/*
+step 1. gen -type cert
+step 2. gen -type license  -name admpub -expiry 2020-12-30
+*/
 
 var (
 	typePtr = flag.String("type", "", "Operation type. Valid values are license or certificate.")

@@ -106,7 +106,7 @@ func (lic *LicenseData) ValidateLicenseKey(pubKey string) error {
 
 // CheckLicenseInfo checks license for logical errors such as for license expiry
 func (lic *LicenseData) CheckLicenseInfo() error {
-	if time.Now().After(lic.Info.Expiration) {
+	if !lic.Info.Expiration.IsZero() && time.Now().After(lic.Info.Expiration) {
 		return ExpiredLicense
 	}
 
