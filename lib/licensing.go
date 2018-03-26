@@ -331,7 +331,5 @@ func CheckLicense(licenseReader, pubKeyReader io.Reader) error {
 }
 
 func CheckLicenseString(license, pubKey string) error {
-	lreader := strings.NewReader(license)
-	pkreader := strings.NewReader(pubKey)
-	return CheckLicense(lreader, pkreader)
+	return CheckLicense(strings.NewReader(license), strings.NewReader(pubKey))
 }
