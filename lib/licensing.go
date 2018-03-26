@@ -24,6 +24,7 @@ var (
 	ErrorLicenseRead = errors.New("Could not read license")
 	ErrorPrivKeyRead = errors.New("Could not read private key")
 	ErrorPubKeyRead  = errors.New("Could not read public key")
+	ErrorMachineID   = errors.New("Could not read machine number")
 	InvalidLicense   = errors.New("Invalid License file")
 	InvalidMachineID = errors.New("Invalid MachineID")
 	InvalidLicenseID = errors.New("Invalid LicenseID")
@@ -330,6 +331,38 @@ func CheckLicense(licenseReader, pubKeyReader io.Reader) error {
 	return lic.CheckLicenseInfo()
 }
 
+// CheckLicenseString 检测授权文件是否有效
+// license 为授权文件内容
+// pubKey 为公钥内容
 func CheckLicenseString(license, pubKey string) error {
 	return CheckLicense(strings.NewReader(license), strings.NewReader(pubKey))
+}
+
+// GenerateLicense 生成授权文件内容
+// privKey 为私钥内容
+func GenerateLicense(info *LicenseInfo, privKey string) ([]byte, error) {
+	if len(info.MachineID) == 0 {
+		addrs, err := MACAddresses(true)
+		if err != nil {
+			return nil, err
+		}
+		if len(addrs) < 1 {
+			return nil, ErrorMachineID
+		}
+		info.MachineID = strings.ToUpper(com.Hash(addrs[0]))
+	} else {
+		info.MachineID = strings.ToUpper(com.Hash(fmt.Sprintf(`%x`, info.MachineID)))
+	}
+	data := &LicenseData{
+		Info: *info,
+	}
+	rsaPrivKey, err := ReadPrivateKey(strings.NewReader(privKey))
+	if err != nil {
+		return nil, err
+	}
+	err = data.Sign(rsaPrivKey)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "  ")
 }
