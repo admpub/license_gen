@@ -23,6 +23,8 @@ var (
 
 	// Required info for license generation
 	name    = flag.String("name", "", "Name of the Licensee")
+	id      = flag.String("id", "", "License ID for the License")
+	machine = flag.String("machine", "", "Machine ID for the License")
 	expDate = flag.String("expiry", "", "Expiry date for the License. Expected format is 2006-1-02")
 
 	verbose = flag.Bool("verbose", true, "Print verbose messages")
@@ -83,9 +85,24 @@ func generateLicense() error {
 	}
 
 	lic := lib.NewLicense(*name, date)
+	lic.Info.MachineID = *machine
+	lic.Info.LicenseID = *id
+	if len(lic.Info.MachineID) == 0 {
+		addrs, err := lib.MACAddresses(true)
+		if err != nil {
+			return err
+		}
+		if len(addrs) > 0 {
+			lic.Info.MachineID = addrs[0]
+		}
+	} else {
+		//lic.Info.MachineID = fmt.Sprintf(`%x`, lic.Info.MachineID)
+	}
 
 	if *verbose {
 		fmt.Println("Licensee:", *name)
+		fmt.Println("Machine ID:", lic.Info.MachineID)
+		fmt.Println("License ID:", lic.Info.LicenseID)
 		fmt.Println("Expiry date:", date)
 		fmt.Println("Signing with private key:", *privKey)
 	}

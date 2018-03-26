@@ -11,9 +11,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/webx-top/com"
 )
 
 // License check errors
@@ -22,12 +25,16 @@ var (
 	ErrorPrivKeyRead = errors.New("Could not read private key")
 	ErrorPubKeyRead  = errors.New("Could not read public key")
 	InvalidLicense   = errors.New("Invalid License file")
+	InvalidMachineID = errors.New("Invalid MachineID")
+	InvalidLicenseID = errors.New("Invalid LicenseID")
 	ExpiredLicense   = errors.New("License expired")
 )
 
 // LicenseInfo - Core information about a license
 type LicenseInfo struct {
 	Name       string    `json:"name"`
+	LicenseID  string    `json:"licenseID,omitempty"`
+	MachineID  string    `json:"machineID,omitempty"`
 	Expiration time.Time `json:"expiration"`
 }
 
@@ -111,6 +118,23 @@ func (lic *LicenseData) CheckLicenseInfo() error {
 		return ExpiredLicense
 	}
 
+	if len(lic.Info.MachineID) > 0 {
+		addrs, err := MACAddresses(true)
+		if err != nil {
+			return err
+		}
+		var valid bool
+		for _, addr := range addrs {
+			if lic.Info.MachineID == addr {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return InvalidMachineID
+		}
+	}
+
 	return nil
 }
 
@@ -165,6 +189,27 @@ func Sign(r *rsa.PrivateKey, data []byte) ([]byte, error) {
 	return rsa.SignPKCS1v15(rand.Reader, r, crypto.SHA256, d)
 }
 
+func MACAddresses(encoded bool) ([]string, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	hardwareAddrs := make([]string, 0)
+	for _, inter := range interfaces {
+		macAddr := fmt.Sprint(inter.HardwareAddr)
+		if len(macAddr) == 0 {
+			continue
+		}
+		if encoded {
+			hardwareAddrs = append(hardwareAddrs, fmt.Sprintf(`%x`, macAddr))
+			continue
+		}
+		hardwareAddrs = append(hardwareAddrs, macAddr)
+	}
+	com.Dump(hardwareAddrs)
+	return hardwareAddrs, err
+}
+
 // Unsign verifies the message using a rsa-sha256 signature
 func Unsign(r *rsa.PublicKey, message []byte, sig []byte) error {
 	h := sha256.New()
@@ -173,7 +218,7 @@ func Unsign(r *rsa.PublicKey, message []byte, sig []byte) error {
 	return rsa.VerifyPKCS1v15(r, crypto.SHA256, d, sig)
 }
 
-// TODO: Move this to a proper test
+// TestLicensingLogic  TODO: Move this to a proper test
 func TestLicensingLogic(privKey, pubKey string) error {
 	fmt.Println("*** TestLicensingLogic ***")
 
