@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -265,7 +266,7 @@ func TestLicensing(privKey, pubKey string) error {
 	return nil
 }
 
-// CheckLicenseFile reads a license from lr and then validate it against the
+// CheckLicense reads a license from lr and then validate it against the
 // public key read from pkr
 func CheckLicense(lr, pkr io.Reader) error {
 	lic, err := ReadLicense(lr)
@@ -283,4 +284,10 @@ func CheckLicense(lr, pkr io.Reader) error {
 	}
 
 	return lic.CheckLicenseInfo()
+}
+
+func CheckLicenseString(license, pubKey string) error {
+	lreader := strings.NewReader(license)
+	pkreader := strings.NewReader(pubKey)
+	return CheckLicense(lreader, pkreader)
 }

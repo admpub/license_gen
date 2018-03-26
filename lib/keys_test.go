@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dewaka/license_gen/lib"
+	"github.com/admpub/license_gen/lib"
 )
 
 var privKey = `-----BEGIN RSA PRIVATE KEY-----

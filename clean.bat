@@ -1,0 +1,1 @@
+rm -f lgen.exe lcheck.exe
