@@ -125,7 +125,7 @@ func (lic *LicenseData) CheckLicenseInfo() error {
 		}
 		var valid bool
 		for _, addr := range addrs {
-			if lic.Info.MachineID == addr {
+			if lic.Info.MachineID == strings.ToUpper(com.Hash(addr)) {
 				valid = true
 				break
 			}
@@ -206,7 +206,6 @@ func MACAddresses(encoded bool) ([]string, error) {
 		}
 		hardwareAddrs = append(hardwareAddrs, macAddr)
 	}
-	com.Dump(hardwareAddrs)
 	return hardwareAddrs, err
 }
 

@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/admpub/license_gen/lib"
+	"github.com/webx-top/com"
 )
 
 /*
@@ -93,10 +95,10 @@ func generateLicense() error {
 			return err
 		}
 		if len(addrs) > 0 {
-			lic.Info.MachineID = addrs[0]
+			lic.Info.MachineID = strings.ToUpper(com.Hash(addrs[0]))
 		}
 	} else {
-		//lic.Info.MachineID = fmt.Sprintf(`%x`, lic.Info.MachineID)
+		lic.Info.MachineID = strings.ToUpper(com.Hash(fmt.Sprintf(`%x`, lic.Info.MachineID)))
 	}
 
 	if *verbose {
