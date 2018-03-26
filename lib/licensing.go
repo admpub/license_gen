@@ -310,15 +310,15 @@ func TestLicensing(privKey, pubKey string) error {
 	return nil
 }
 
-// CheckLicense reads a license from lr and then validate it against the
-// public key read from pkr
-func CheckLicense(lr, pkr io.Reader) error {
-	lic, err := ReadLicense(lr)
+// CheckLicense reads a license from licenseReader and then validate it against the
+// public key read from pubKeyReader
+func CheckLicense(licenseReader, pubKeyReader io.Reader) error {
+	lic, err := ReadLicense(licenseReader)
 	if err != nil {
 		return ErrorLicenseRead
 	}
 
-	publicKey, err := ReadPublicKey(pkr)
+	publicKey, err := ReadPublicKey(pubKeyReader)
 	if err != nil {
 		return ErrorPubKeyRead
 	}
