@@ -31,12 +31,17 @@ var (
 	ExpiredLicense   = errors.New("License expired")
 )
 
+type Validator interface {
+	Validate() error
+}
+
 // LicenseInfo - Core information about a license
 type LicenseInfo struct {
 	Name       string    `json:"name"`
 	LicenseID  string    `json:"licenseID,omitempty"`
 	MachineID  string    `json:"machineID,omitempty"`
 	Expiration time.Time `json:"expiration"`
+	Extra      Validator `json:"extra,omitempty"`
 }
 
 // LicenseData - This is the license data we serialise into a license file
@@ -134,6 +139,10 @@ func (lic *LicenseData) CheckLicenseInfo() error {
 		if !valid {
 			return InvalidMachineID
 		}
+	}
+
+	if lic.Info.Extra != nil {
+		return lic.Info.Extra.Validate()
 	}
 
 	return nil

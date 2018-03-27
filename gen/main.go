@@ -17,16 +17,18 @@ step 2. gen -type license  -name admpub -expiry 2020-12-30
 */
 
 var (
-	typePtr = flag.String("type", "", "Operation type. Valid values are license or certificate.")
+	typePtr = flag.String("type", "cert", "Operation type. Valid values are license or certificate.")
 	licFile = flag.String("lic", "license.json", "License file name. Required for license generation.")
 	certKey = flag.String("cert", "cert.pem", "Public certificate key.")
 	privKey = flag.String("key", "key.pem", "Certificate key file. Required for license generation.")
 	rsaBits = flag.Int("rsa-bits", 2048, "Size of RSA key to generate. Only used when type is certificate.")
 
-	// Required info for license generation
-	name    = flag.String("name", "", "Name of the Licensee")
+	// License
 	id      = flag.String("id", "", "License ID for the License")
 	machine = flag.String("machine", "", "Machine ID for the License")
+
+	// Required info for license generation
+	name    = flag.String("name", "", "Name of the Licensee")
 	expDate = flag.String("expiry", "", "Expiry date for the License. Expected format is 2006-1-02")
 
 	verbose = flag.Bool("verbose", true, "Print verbose messages")

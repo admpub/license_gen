@@ -154,34 +154,45 @@ func GenerateRSACertificate(certName string, keyName string, rsaKeyData *RSAKeyD
 }
 
 func GenerateCertificate(certName string, keyName string, rsaBits int) error {
-	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
+	pubBytes, privBytes, err := GenerateCertificateData(rsaBits)
 	if err != nil {
 		return err
 	}
 
-	pubASN1, err := x509.MarshalPKIXPublicKey(&priv.PublicKey)
-	if err != nil {
-		return nil
-	}
-
-	pubBytes := pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: pubASN1,
-	})
 	if err := ioutil.WriteFile(certName, pubBytes, 0644); err != nil {
 		return err
 	}
 
-	privBytes := x509.MarshalPKCS1PrivateKey(priv)
-	privBytes = pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: privBytes,
-	})
 	if err := ioutil.WriteFile(keyName, privBytes, 0644); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func GenerateCertificateData(rsaBits int) (pubBytes []byte, privBytes []byte, err error) {
+	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pubASN1, err := x509.MarshalPKIXPublicKey(&priv.PublicKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pubBytes = pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: pubASN1,
+	})
+
+	privBytes = x509.MarshalPKCS1PrivateKey(priv)
+	privBytes = pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privBytes,
+	})
+
+	return
 }
 
 func ReadPublicKey(r io.Reader) (*rsa.PublicKey, error) {
