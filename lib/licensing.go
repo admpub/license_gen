@@ -320,24 +320,33 @@ func TestLicensing(privKey, pubKey string) error {
 	return nil
 }
 
-// CheckLicense reads a license from licenseReader and then validate it against the
-// public key read from pubKeyReader
-func CheckLicense(licenseReader, pubKeyReader io.Reader) error {
+func CheckAndReturningLicense(licenseReader, pubKeyReader io.Reader) (*LicenseData, error) {
 	lic, err := ReadLicense(licenseReader)
 	if err != nil {
-		return ErrorLicenseRead
+		return lic, ErrorLicenseRead
 	}
 
 	publicKey, err := ReadPublicKey(pubKeyReader)
 	if err != nil {
-		return ErrorPubKeyRead
+		return lic, ErrorPubKeyRead
 	}
 
 	if err := lic.ValidateLicenseKeyWithPublicKey(publicKey); err != nil {
-		return InvalidLicense // we have a key mismatch here meaning license data is tampered
+		return lic, InvalidLicense // we have a key mismatch here meaning license data is tampered
 	}
 
-	return lic.CheckLicenseInfo()
+	return lic, lic.CheckLicenseInfo()
+}
+
+// CheckLicense reads a license from licenseReader and then validate it against the
+// public key read from pubKeyReader
+func CheckLicense(licenseReader, pubKeyReader io.Reader) error {
+	_, err := CheckAndReturningLicense(licenseReader, pubKeyReader)
+	return err
+}
+
+func CheckLicenseStringAndReturning(license, pubKey string) (*LicenseData, error) {
+	return CheckAndReturningLicense(strings.NewReader(license), strings.NewReader(pubKey))
 }
 
 // CheckLicenseString 检测授权文件是否有效
