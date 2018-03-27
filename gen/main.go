@@ -4,11 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/admpub/license_gen/lib"
-	"github.com/webx-top/com"
 )
 
 /*
@@ -26,6 +24,7 @@ var (
 	// License
 	id      = flag.String("id", "", "License ID for the License")
 	machine = flag.String("machine", "", "Machine ID for the License")
+	hashed  = flag.Bool("hashed", false, "Machine ID for the License")
 
 	// Required info for license generation
 	name    = flag.String("name", "", "Name of the Licensee")
@@ -92,15 +91,15 @@ func generateLicense() error {
 	lic.Info.MachineID = *machine
 	lic.Info.LicenseID = *id
 	if len(lic.Info.MachineID) == 0 {
-		addrs, err := lib.MACAddresses(true)
+		addrs, err := lib.MACAddresses(false)
 		if err != nil {
 			return err
 		}
 		if len(addrs) > 0 {
-			lic.Info.MachineID = strings.ToUpper(com.Hash(addrs[0]))
+			lic.Info.MachineID = lib.Hash(addrs[0])
 		}
-	} else {
-		lic.Info.MachineID = strings.ToUpper(com.Hash(fmt.Sprintf(`%x`, lic.Info.MachineID)))
+	} else if *hashed == false {
+		lic.Info.MachineID = lib.Hash(lic.Info.MachineID)
 	}
 
 	if *verbose {

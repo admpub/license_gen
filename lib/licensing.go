@@ -125,13 +125,13 @@ func (lic *LicenseData) CheckLicenseInfo() error {
 	}
 
 	if len(lic.Info.MachineID) > 0 {
-		addrs, err := MACAddresses(true)
+		addrs, err := MACAddresses(false)
 		if err != nil {
 			return err
 		}
 		var valid bool
 		for _, addr := range addrs {
-			if lic.Info.MachineID == strings.ToUpper(com.Hash(addr)) {
+			if lic.Info.MachineID == Hash(addr) {
 				valid = true
 				break
 			}
@@ -356,6 +356,10 @@ func CheckLicenseString(license, pubKey string) error {
 	return CheckLicense(strings.NewReader(license), strings.NewReader(pubKey))
 }
 
+func Hash(raw string) string {
+	return strings.ToUpper(com.Hash(fmt.Sprintf(`%x`, raw)))
+}
+
 // GenerateLicense 生成授权文件内容
 // privKey 为私钥内容
 func GenerateLicense(info *LicenseInfo, privKey string) ([]byte, error) {
@@ -368,8 +372,6 @@ func GenerateLicense(info *LicenseInfo, privKey string) ([]byte, error) {
 			return nil, ErrorMachineID
 		}
 		info.MachineID = strings.ToUpper(com.Hash(addrs[0]))
-	} else {
-		info.MachineID = strings.ToUpper(com.Hash(fmt.Sprintf(`%x`, info.MachineID)))
 	}
 	data := &LicenseData{
 		Info: *info,
