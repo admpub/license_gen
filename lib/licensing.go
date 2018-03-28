@@ -102,11 +102,7 @@ func (lic *LicenseData) ValidateLicenseKeyWithPublicKey(publicKey *rsa.PublicKey
 		return err
 	}
 
-	if err := Unsign(publicKey, jsonLicInfo, signedData); err != nil {
-		return err
-	}
-
-	return nil
+	return Unsign(publicKey, jsonLicInfo, signedData)
 }
 
 func (lic *LicenseData) ValidateLicenseKey(pubKey string) error {

@@ -5,8 +5,6 @@ package lib
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build ignore
-
 // Generate a self-signed X.509 certificate for a TLS server. Outputs to
 // 'cert.pem' and 'key.pem' and will overwrite existing files.
 
@@ -65,7 +63,7 @@ type RSAKeyData struct {
 	ECDSACurve string
 }
 
-// TODO: Find out why this method does not produce de-serializable keys (i.e.
+// GenerateRSACertificate TODO: Find out why this method does not produce de-serializable keys (i.e.
 // certificates produced by this method cannot be read back!)
 func GenerateRSACertificate(certName string, keyName string, rsaKeyData *RSAKeyData) error {
 	if len(rsaKeyData.Host) == 0 {
@@ -163,11 +161,7 @@ func GenerateCertificate(certName string, keyName string, rsaBits int) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(keyName, privBytes, 0644); err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(keyName, privBytes, 0644)
 }
 
 func GenerateCertificateData(rsaBits int) (pubBytes []byte, privBytes []byte, err error) {
@@ -206,7 +200,7 @@ func ReadPublicKey(r io.Reader) (*rsa.PublicKey, error) {
 	pubkeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing public key: %s\n", err)
+		return nil, fmt.Errorf("Error parsing public key: %s", err)
 	}
 
 	pubkey, ok := pubkeyInterface.(*rsa.PublicKey)
