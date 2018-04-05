@@ -44,6 +44,19 @@ type LicenseInfo struct {
 	Extra      Validator `json:"extra,omitempty"`
 }
 
+func (a LicenseInfo) Remaining(langs ...string) string {
+	if a.Expiration.IsZero() {
+		return `unlimited`
+	}
+	now := time.Now()
+	duration := a.Expiration.Sub(now)
+	//duration *= -1
+	if len(langs) > 0 {
+		return com.ParseDuration(duration, langs[0]).String()
+	}
+	return com.ParseDuration(duration).String()
+}
+
 // LicenseData - This is the license data we serialise into a license file
 type LicenseData struct {
 	Info LicenseInfo `json:"info"`
