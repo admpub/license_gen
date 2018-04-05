@@ -21,14 +21,15 @@ import (
 
 // License check errors
 var (
-	ErrorLicenseRead = errors.New("Could not read license")
-	ErrorPrivKeyRead = errors.New("Could not read private key")
-	ErrorPubKeyRead  = errors.New("Could not read public key")
-	ErrorMachineID   = errors.New("Could not read machine number")
-	InvalidLicense   = errors.New("Invalid License file")
-	InvalidMachineID = errors.New("Invalid MachineID")
-	InvalidLicenseID = errors.New("Invalid LicenseID")
-	ExpiredLicense   = errors.New("License expired")
+	ErrorLicenseRead  = errors.New("Could not read license")
+	ErrorPrivKeyRead  = errors.New("Could not read private key")
+	ErrorPubKeyRead   = errors.New("Could not read public key")
+	ErrorMachineID    = errors.New("Could not read machine number")
+	InvalidLicense    = errors.New("Invalid License file")
+	UnlicensedVersion = errors.New("Unlicensed Version")
+	InvalidMachineID  = errors.New("Invalid MachineID")
+	InvalidLicenseID  = errors.New("Invalid LicenseID")
+	ExpiredLicense    = errors.New("License expired")
 )
 
 type Validator interface {
@@ -37,9 +38,10 @@ type Validator interface {
 
 // LicenseInfo - Core information about a license
 type LicenseInfo struct {
-	Name       string    `json:"name"`
+	Name       string    `json:"name,omitempty"`
 	LicenseID  string    `json:"licenseID,omitempty"`
 	MachineID  string    `json:"machineID,omitempty"`
+	Version    string    `json:"version,omitempty"`
 	Expiration time.Time `json:"expiration"`
 	Extra      Validator `json:"extra,omitempty"`
 }
@@ -128,9 +130,53 @@ func (lic *LicenseData) ValidateLicenseKey(pubKey string) error {
 }
 
 // CheckLicenseInfo checks license for logical errors such as for license expiry
-func (lic *LicenseData) CheckLicenseInfo() error {
+func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
 	if !lic.Info.Expiration.IsZero() && time.Now().After(lic.Info.Expiration) {
 		return ExpiredLicense
+	}
+	if len(versions) > 0 && len(lic.Info.Version) > 0 {
+		if len(lic.Info.Version) > 1 {
+			switch lic.Info.Version[0] {
+			case '>':
+				if len(lic.Info.Version) > 2 && lic.Info.Version[1] == '=' {
+					if !com.VersionComparex(versions[0], lic.Info.Version[2:], `>=`) {
+						return UnlicensedVersion
+					}
+					break
+				}
+				if !com.VersionComparex(versions[0], lic.Info.Version[1:], `>`) {
+					return UnlicensedVersion
+				}
+			case '<':
+				if len(lic.Info.Version) > 2 && lic.Info.Version[1] == '=' {
+					if !com.VersionComparex(versions[0], lic.Info.Version[2:], `<=`) {
+						return UnlicensedVersion
+					}
+					break
+				}
+				if !com.VersionComparex(versions[0], lic.Info.Version[1:], `<`) {
+					return UnlicensedVersion
+				}
+			case '!':
+				if len(lic.Info.Version) > 2 && lic.Info.Version[1] == '=' {
+					if lic.Info.Version[2:] == versions[0] {
+						return UnlicensedVersion
+					}
+					break
+				}
+				if lic.Info.Version[1:] == versions[0] {
+					return UnlicensedVersion
+				}
+			default:
+				if lic.Info.Version != versions[0] {
+					return UnlicensedVersion
+				}
+			}
+		} else {
+			if lic.Info.Version != versions[0] {
+				return UnlicensedVersion
+			}
+		}
 	}
 
 	if len(lic.Info.MachineID) > 0 {
