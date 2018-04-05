@@ -24,6 +24,7 @@ var (
 	// License
 	id      = flag.String("id", "", "License ID for the License")
 	machine = flag.String("machine", "", "Machine ID for the License")
+	version = flag.String("version", "", "Licensed Version No.")
 	hashed  = flag.Bool("hashed", false, "Machine ID for the License")
 
 	// Required info for license generation
@@ -90,6 +91,7 @@ func generateLicense() error {
 	lic := lib.NewLicense(*name, date)
 	lic.Info.MachineID = *machine
 	lic.Info.LicenseID = *id
+	lic.Info.Version = *version
 	if len(lic.Info.MachineID) == 0 {
 		addrs, err := lib.MACAddresses(false)
 		if err != nil {
