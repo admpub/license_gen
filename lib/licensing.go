@@ -134,7 +134,7 @@ func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
 	if !lic.Info.Expiration.IsZero() && time.Now().After(lic.Info.Expiration) {
 		return ExpiredLicense
 	}
-	if len(versions) > 0 && len(lic.Info.Version) > 0 {
+	if len(versions) > 0 && len(versions[0]) > 0 && len(lic.Info.Version) > 0 {
 		if len(lic.Info.Version) > 1 {
 			switch lic.Info.Version[0] {
 			case '>':

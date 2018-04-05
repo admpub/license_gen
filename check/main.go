@@ -11,6 +11,7 @@ import (
 var (
 	licFile = flag.String("lic", "license.json", "License file name. Required for license generation.")
 	certKey = flag.String("cert", "cert.pem", "Public certificate key.")
+	version = flag.String("version", "", "Verify Version No.")
 	verbose = flag.Bool("verbose", false, "Print verbose messages")
 )
 
@@ -47,7 +48,7 @@ func checkLicense(verbose bool) error {
 		fmt.Println("License key verified!")
 	}
 
-	if err := license.CheckLicenseInfo(); err != nil {
+	if err := license.CheckLicenseInfo(*version); err != nil {
 		return err
 	}
 
