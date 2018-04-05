@@ -200,12 +200,50 @@ func ReadLicenseFromFile(licFile string) (*LicenseData, error) {
 	return ReadLicense(file)
 }
 
+func SignData(privKey string, data []byte) (string, error) {
+	rsaPrivKey, err := ReadPrivateKey(strings.NewReader(privKey))
+	if err != nil {
+		fmt.Println("Error reading private key:", err)
+		return ``, err
+	}
+
+	signedData, err := Sign(rsaPrivKey, data)
+	if err != nil {
+		fmt.Println("Error signing data:", err)
+		return ``, err
+	}
+
+	return encodeKey(signedData), nil
+}
+
 // Sign signs data with rsa-sha256
 func Sign(r *rsa.PrivateKey, data []byte) ([]byte, error) {
 	h := sha256.New()
 	h.Write(data)
 	d := h.Sum(nil)
 	return rsa.SignPKCS1v15(rand.Reader, r, crypto.SHA256, d)
+}
+
+func UnsignData(pubKey string, signature string, data []byte) error {
+	publicKey, err := ReadPublicKey(strings.NewReader(pubKey))
+	if err != nil {
+		return err
+	}
+
+	signedData, err := decodeKey(signature)
+	if err != nil {
+		return err
+	}
+
+	return Unsign(publicKey, data, signedData)
+}
+
+// Unsign verifies the message using a rsa-sha256 signature
+func Unsign(r *rsa.PublicKey, message []byte, sig []byte) error {
+	h := sha256.New()
+	h.Write(message)
+	d := h.Sum(nil)
+	return rsa.VerifyPKCS1v15(r, crypto.SHA256, d, sig)
 }
 
 func MACAddresses(encoded bool) ([]string, error) {
@@ -226,14 +264,6 @@ func MACAddresses(encoded bool) ([]string, error) {
 		hardwareAddrs = append(hardwareAddrs, macAddr)
 	}
 	return hardwareAddrs, err
-}
-
-// Unsign verifies the message using a rsa-sha256 signature
-func Unsign(r *rsa.PublicKey, message []byte, sig []byte) error {
-	h := sha256.New()
-	h.Write(message)
-	d := h.Sum(nil)
-	return rsa.VerifyPKCS1v15(r, crypto.SHA256, d, sig)
 }
 
 // TestLicensingLogic  TODO: Move this to a proper test
