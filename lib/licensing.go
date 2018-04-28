@@ -44,19 +44,22 @@ type LicenseInfo struct {
 	Version    string    `json:"version,omitempty"`
 	Expiration time.Time `json:"expiration"`
 	Extra      Validator `json:"extra,omitempty"`
+	durafmt    *com.Durafmt
 }
 
-func (a LicenseInfo) Remaining(langs ...string) string {
+func (a *LicenseInfo) Remaining(langs ...string) *com.Durafmt {
 	if a.Expiration.IsZero() {
-		return `unlimited`
+		return nil
 	}
 	now := time.Now()
 	duration := a.Expiration.Sub(now)
 	//duration *= -1
 	if len(langs) > 0 {
-		return com.ParseDuration(duration, langs[0]).String()
+		a.durafmt = com.ParseDuration(duration, langs[0])
+	} else {
+		a.durafmt = com.ParseDuration(duration)
 	}
-	return com.ParseDuration(duration).String()
+	return a.durafmt
 }
 
 // LicenseData - This is the license data we serialise into a license file
