@@ -51,6 +51,9 @@ func (a *LicenseInfo) Remaining(langs ...string) *com.Durafmt {
 	if a.Expiration.IsZero() {
 		return nil
 	}
+	if a.durafmt != nil {
+		return a.durafmt
+	}
 	now := time.Now()
 	duration := a.Expiration.Sub(now)
 	//duration *= -1
