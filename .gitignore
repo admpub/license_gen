@@ -20,3 +20,5 @@
 *.pem
 # License files are in json format, so ignore them too
 *.json
+lcheck
+lgen
