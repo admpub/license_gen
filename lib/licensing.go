@@ -18,6 +18,8 @@ var (
 	ErrorLicenseRead  = errors.New("Could not read license")
 	ErrorPrivKeyRead  = errors.New("Could not read private key")
 	ErrorPubKeyRead   = errors.New("Could not read public key")
+	ErrorPrivKey      = errors.New("Invalid private key")
+	ErrorPubKey       = errors.New("Invalid public key")
 	ErrorMachineID    = errors.New("Could not read machine number")
 	InvalidLicense    = errors.New("Invalid License file")
 	UnlicensedVersion = errors.New("Unlicensed Version")

@@ -195,7 +195,9 @@ func ReadPublicKey(r io.Reader) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 	block, _ := pem.Decode(keyBytes)
-	// fmt.Printf("block.Type: %s\n", block.Type)
+	if block == nil {
+		return nil, ErrorPubKey
+	}
 
 	pubkeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 
@@ -228,6 +230,9 @@ func ReadPrivateKey(r io.Reader) (*rsa.PrivateKey, error) {
 	}
 
 	block, _ := pem.Decode(keyBytes)
+	if block == nil {
+		return nil, ErrorPrivKey
+	}
 	privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
