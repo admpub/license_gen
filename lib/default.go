@@ -1,18 +1,17 @@
 package lib
 
 type DefaultValidator struct {
-	*LicenseData
 	NowVersions []string
 }
 
-func (v *DefaultValidator) Validate() error {
-	if err := v.CheckExpiration(); err != nil {
+func (v *DefaultValidator) Validate(data *LicenseData) error {
+	if err := data.CheckExpiration(); err != nil {
 		return err
 	}
-	if err := v.CheckVersion(v.NowVersions...); err != nil {
+	if err := data.CheckVersion(v.NowVersions...); err != nil {
 		return err
 	}
-	if err := v.CheckMAC(); err != nil {
+	if err := data.CheckMAC(); err != nil {
 		return err
 	}
 	return nil

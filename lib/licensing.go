@@ -27,7 +27,7 @@ var (
 )
 
 type Validator interface {
-	Validate() error
+	Validate(*LicenseData) error
 }
 
 // LicenseInfo - Core information about a license
@@ -202,7 +202,7 @@ func (lic *LicenseData) CheckMAC() error {
 }
 
 func (lic *LicenseData) DefaultValidator(versions ...string) Validator {
-	return &DefaultValidator{LicenseData: lic, NowVersions: versions}
+	return &DefaultValidator{NowVersions: versions}
 }
 
 // CheckLicenseInfo checks license for logical errors such as for license expiry
@@ -210,11 +210,11 @@ func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
 	if lic.Info.validator == nil {
 		lic.Info.SetValidator(lic.DefaultValidator(versions...))
 	}
-	if err := lic.Info.validator.Validate(); err != nil {
+	if err := lic.Info.validator.Validate(lic); err != nil {
 		return err
 	}
 	if lic.Info.Extra != nil {
-		return lic.Info.Extra.Validate()
+		return lic.Info.Extra.Validate(lic)
 	}
 	return nil
 }
