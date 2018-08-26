@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/admpub/license_gen/lib"
 	"github.com/webx-top/com"
 )
 
@@ -44,6 +45,11 @@ type LicenseInfo struct {
 	Version    string    `json:"version,omitempty"`
 	Expiration time.Time `json:"expiration"`
 	Extra      Validator `json:"extra,omitempty"`
+	validator  Validator
+}
+
+func (a *LicenseInfo) SetValidator(v Validator) {
+	a.validator = v
 }
 
 func (a LicenseInfo) Remaining(langs ...string) *com.Durafmt {
@@ -129,11 +135,14 @@ func (lic *LicenseData) ValidateLicenseKey(pubKey string) error {
 	return lic.ValidateLicenseKeyWithPublicKey(publicKey)
 }
 
-// CheckLicenseInfo checks license for logical errors such as for license expiry
-func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
+func (lic *LicenseData) CheckExpiration() error {
 	if !lic.Info.Expiration.IsZero() && time.Now().After(lic.Info.Expiration) {
 		return ExpiredLicense
 	}
+	return nil
+}
+
+func (lic *LicenseData) CheckVersion(versions ...string) error {
 	if len(versions) > 0 && len(versions[0]) > 0 && len(lic.Info.Version) > 0 {
 		if len(lic.Info.Version) > 1 {
 			switch lic.Info.Version[0] {
@@ -178,28 +187,60 @@ func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
 			}
 		}
 	}
+	return nil
+}
 
-	if len(lic.Info.MachineID) > 0 {
-		addrs, err := MACAddresses(false)
-		if err != nil {
-			return err
-		}
-		var valid bool
-		for _, addr := range addrs {
-			if lic.Info.MachineID == Hash(addr) {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return InvalidMachineID
+func (lic *LicenseData) CheckMAC() error {
+	addrs, err := MACAddresses(false)
+	if err != nil {
+		return err
+	}
+	var valid bool
+	for _, addr := range addrs {
+		if lic.Info.MachineID == Hash(addr) {
+			valid = true
+			break
 		}
 	}
+	if !valid {
+		return InvalidMachineID
+	}
+	return nil
+}
 
+type DefaultValidator struct {
+	*LicenseData
+	NowVersions []string
+}
+
+func (v *DefaultValidator) Validate() error {
+	if err := v.CheckExpiration(); err != nil {
+		return err
+	}
+	if err := v.CheckVersion(v.NowVersions...); err != nil {
+		return err
+	}
+	if err := v.CheckMAC(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (lic *LicenseData) DefaultValidator(versions ...string) Validator {
+	return &DefaultValidator{LicenseData: lic, NowVersions: versions}
+}
+
+// CheckLicenseInfo checks license for logical errors such as for license expiry
+func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
+	if lic.Info.validator == nil {
+		lic.Info.SetValidator(lib.DefaultValidator(versions...))
+	}
+	if err := lic.Info.validator.Validate(); err != nil {
+		return err
+	}
 	if lic.Info.Extra != nil {
 		return lic.Info.Extra.Validate()
 	}
-
 	return nil
 }
 
