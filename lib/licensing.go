@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/admpub/license_gen/lib"
 	"github.com/webx-top/com"
 )
 
@@ -233,7 +232,7 @@ func (lic *LicenseData) DefaultValidator(versions ...string) Validator {
 // CheckLicenseInfo checks license for logical errors such as for license expiry
 func (lic *LicenseData) CheckLicenseInfo(versions ...string) error {
 	if lic.Info.validator == nil {
-		lic.Info.SetValidator(lib.DefaultValidator(versions...))
+		lic.Info.SetValidator(lic.DefaultValidator(versions...))
 	}
 	if err := lic.Info.validator.Validate(); err != nil {
 		return err
