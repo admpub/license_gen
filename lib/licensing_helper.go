@@ -149,6 +149,14 @@ func Hash(raw string) string {
 // GenerateLicense 生成授权文件内容
 // privKey 为私钥内容
 func GenerateLicense(info *LicenseInfo, privKey string) ([]byte, error) {
+	data, err := BuildLicense(info, privKey)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "  ")
+}
+
+func BuildLicense(info *LicenseInfo, privKey string) (*LicenseData, error) {
 	if len(info.MachineID) == 0 {
 		addrs, err := MACAddresses(true)
 		if err != nil {
@@ -170,5 +178,5 @@ func GenerateLicense(info *LicenseInfo, privKey string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "  ")
+	return data, err
 }
