@@ -61,7 +61,7 @@ func TestCheckLicense(t *testing.T) {
 	lreader := strings.NewReader(testLicense)
 	pkreader := strings.NewReader(pubKey)
 
-	err := lib.CheckLicense(lreader, pkreader)
+	err := lib.CheckLicense(lreader, pkreader, nil)
 	if err != nil {
 		t.Errorf("Expected nil error, but found %s\n", err)
 	}
