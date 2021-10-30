@@ -24,6 +24,7 @@ var (
 	// License
 	id      = flag.String("id", "", "License ID for the License")
 	machine = flag.String("machine", "", "Machine ID for the License")
+	domain  = flag.String("domain", "", "Domain for the License")
 	version = flag.String("version", "", "Licensed Version No.")
 	hashed  = flag.Bool("hashed", false, "Machine ID for the License")
 
@@ -92,6 +93,7 @@ func generateLicense() error {
 	lic.Info.MachineID = *machine
 	lic.Info.LicenseID = *id
 	lic.Info.Version = *version
+	lic.Info.Domain = *domain
 	if len(lic.Info.MachineID) == 0 {
 		addrs, err := lib.MACAddresses(false)
 		if err != nil {
@@ -107,6 +109,7 @@ func generateLicense() error {
 	if *verbose {
 		fmt.Println("Licensee:", *name)
 		fmt.Println("Machine ID:", lic.Info.MachineID)
+		fmt.Println("Domain:", lic.Info.Domain)
 		fmt.Println("License ID:", lic.Info.LicenseID)
 		fmt.Println("Expiry date:", date)
 		fmt.Println("Signing with private key:", *privKey)

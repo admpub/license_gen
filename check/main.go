@@ -35,6 +35,7 @@ func checkLicense(verbose bool) error {
 	if verbose {
 		fmt.Println("Name:", license.Info.Name)
 		fmt.Println("Machine ID:", license.Info.MachineID)
+		fmt.Println("Domain:", license.Info.Domain)
 		fmt.Println("License ID:", license.Info.LicenseID)
 		fmt.Println("Expiry:", license.Info.Expiration)
 		fmt.Println("Key:", license.Key)
