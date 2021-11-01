@@ -140,40 +140,6 @@ func (lic *LicenseData) CheckExpiration() error {
 	return nil
 }
 
-func CheckVersion(version string, versionRule string) bool {
-	if len(versionRule) == 0 {
-		return true
-	}
-	if len(versionRule) < 2 {
-		return versionRule == version
-	}
-	switch versionRule[0] {
-	case '>':
-		if len(versionRule) > 2 {
-			if versionRule[1] == '=' {
-				return com.VersionComparex(version, versionRule[2:], `>=`)
-			}
-		}
-		return com.VersionComparex(version, versionRule[1:], `>`)
-	case '<':
-		if len(versionRule) > 2 {
-			if versionRule[1] == '=' {
-				return com.VersionComparex(version, versionRule[2:], `<=`)
-			}
-		}
-		return com.VersionComparex(version, versionRule[1:], `<`)
-	case '!':
-		if len(versionRule) > 2 {
-			if versionRule[1] == '=' {
-				return versionRule[2:] != version
-			}
-		}
-		return versionRule[1:] != version
-	default:
-		return versionRule == version
-	}
-}
-
 func (lic *LicenseData) CheckVersion(versions ...string) error {
 	if len(versions) > 0 && len(versions[0]) > 0 && len(lic.Info.Version) > 0 {
 		if !CheckVersion(versions[0], lic.Info.Version) {
@@ -205,9 +171,11 @@ func (lic *LicenseData) CheckDomain(domain string) error {
 	if len(lic.Info.Domain) == 0 {
 		return nil
 	}
-	if lic.Info.Domain != domain {
+
+	if CheckDomain(domain, lic.Info.Domain) {
 		return InvalidDomain
 	}
+
 	return nil
 }
 

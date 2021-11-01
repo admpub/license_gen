@@ -22,3 +22,5 @@
 *.json
 lcheck
 lgen
+go.mod
+go.sum
