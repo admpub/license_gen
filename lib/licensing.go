@@ -245,3 +245,7 @@ func (lic *LicenseData) HasFeature(feature ...string) bool {
 func (lic *LicenseData) HasAnyFeature(feature ...string) bool {
 	return lic.Info.HasAnyFeature(feature...)
 }
+
+func (lic *LicenseData) ExistsFeatureMap(feature ...string) map[string]bool {
+	return lic.Info.ExistsFeatureMap(feature...)
+}
