@@ -16,7 +16,7 @@ func CheckMAC(hashedMAC string) error {
 			return nil
 		}
 	}
-	return InvalidMachineID
+	return ErrInvalidMachineID
 }
 
 func CheckVersion(version string, versionRule string) bool {

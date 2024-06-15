@@ -18,7 +18,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net"
@@ -67,7 +66,7 @@ type RSAKeyData struct {
 // certificates produced by this method cannot be read back!)
 func GenerateRSACertificate(certName string, keyName string, rsaKeyData *RSAKeyData) error {
 	if len(rsaKeyData.Host) == 0 {
-		return fmt.Errorf("Host parameter is required")
+		return ErrHostParameterRequired
 	}
 
 	var priv interface{}
@@ -84,7 +83,7 @@ func GenerateRSACertificate(certName string, keyName string, rsaKeyData *RSAKeyD
 	case "P521":
 		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		return fmt.Errorf("Unrecognized elliptic curve: %q", rsaKeyData.ECDSACurve)
+		return fmt.Errorf("%w: %q", ErrUnrecognizedEllipticCurve, rsaKeyData.ECDSACurve)
 	}
 	if err != nil {
 		return err
@@ -157,11 +156,11 @@ func GenerateCertificate(certName string, keyName string, rsaBits int) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(certName, pubBytes, 0644); err != nil {
+	if err := os.WriteFile(certName, pubBytes, 0644); err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(keyName, privBytes, 0644)
+	return os.WriteFile(keyName, privBytes, 0644)
 }
 
 func GenerateCertificateData(rsaBits int) (pubBytes []byte, privBytes []byte, err error) {
@@ -190,19 +189,19 @@ func GenerateCertificateData(rsaBits int) (pubBytes []byte, privBytes []byte, er
 }
 
 func ReadPublicKey(r io.Reader) (*rsa.PublicKey, error) {
-	keyBytes, err := ioutil.ReadAll(r)
+	keyBytes, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		return nil, ErrorPubKey
+		return nil, ErrPubKey
 	}
 
 	pubkeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing public key: %s", err)
+		return nil, fmt.Errorf("%w: %s", ErrParsingPublicKey, err)
 	}
 
 	pubkey, ok := pubkeyInterface.(*rsa.PublicKey)
@@ -215,23 +214,23 @@ func ReadPublicKey(r io.Reader) (*rsa.PublicKey, error) {
 
 func ReadPublicKeyFromFile(key string) (*rsa.PublicKey, error) {
 	file, err := os.Open(key)
-	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	return ReadPublicKey(file)
 }
 
 func ReadPrivateKey(r io.Reader) (*rsa.PrivateKey, error) {
-	keyBytes, err := ioutil.ReadAll(r)
+	keyBytes, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		return nil, ErrorPrivKey
+		return nil, ErrPrivKey
 	}
 	privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
@@ -243,10 +242,10 @@ func ReadPrivateKey(r io.Reader) (*rsa.PrivateKey, error) {
 
 func ReadPrivateKeyFromFile(key string) (*rsa.PrivateKey, error) {
 	file, err := os.Open(key)
-	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	return ReadPrivateKey(file)
 }

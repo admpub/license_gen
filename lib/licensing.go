@@ -4,29 +4,12 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/webx-top/com"
-)
-
-// License check errors
-var (
-	ErrorLicenseRead  = errors.New("Could not read license")
-	ErrorPrivKeyRead  = errors.New("Could not read private key")
-	ErrorPubKeyRead   = errors.New("Could not read public key")
-	ErrorPrivKey      = errors.New("Invalid private key")
-	ErrorPubKey       = errors.New("Invalid public key")
-	ErrorMachineID    = errors.New("Could not read machine number")
-	InvalidLicense    = errors.New("Invalid License file")
-	UnlicensedVersion = errors.New("Unlicensed Version")
-	InvalidMachineID  = errors.New("Invalid MachineID")
-	InvalidLicenseID  = errors.New("Invalid LicenseID")
-	InvalidDomain     = errors.New("Invalid Domain")
-	ExpiredLicense    = errors.New("License expired")
 )
 
 type Validator interface {
@@ -41,6 +24,7 @@ type LicenseInfo struct {
 	Domain     string    `json:"domain,omitempty" xml:"domain,omitempty"`
 	Version    string    `json:"version,omitempty" xml:"version,omitempty"`
 	Package    string    `json:"package,omitempty" xml:"package,omitempty"`
+	Feature    []string  `json:"feature,omitempty" xml:"feature,omitempty"`
 	Expiration time.Time `json:"expiration" xml:"expiration,omitempty"`
 	Extra      Validator `json:"extra,omitempty" xml:"extra,omitempty"`
 	validator  Validator
@@ -61,6 +45,44 @@ func (a LicenseInfo) Remaining(langs ...string) *com.Durafmt {
 		return com.ParseDuration(duration, langs[0])
 	}
 	return com.ParseDuration(duration)
+}
+
+func (a LicenseInfo) HasFeature(feature ...string) bool {
+	if len(feature) == 0 {
+		return false
+	}
+	if len(a.Feature) == 0 {
+		return false
+	}
+	for _, v := range feature {
+		if !com.InSlice(v, a.Feature) {
+			return false
+		}
+	}
+	return true
+}
+
+func (a LicenseInfo) ExistsFeatureMap(feature ...string) map[string]bool {
+	r := map[string]bool{}
+	if len(feature) == 0 {
+		return r
+	}
+	if len(a.Feature) == 0 {
+		return r
+	}
+	for _, v := range feature {
+		r[v] = com.InSlice(v, a.Feature)
+	}
+	return r
+}
+
+func (a LicenseInfo) HasAnyFeature(feature ...string) bool {
+	for _, v := range feature {
+		if com.InSlice(v, a.Feature) {
+			return true
+		}
+	}
+	return false
 }
 
 // LicenseData - This is the license data we serialise into a license file
@@ -135,7 +157,7 @@ func (lic *LicenseData) ValidateLicenseKey(pubKey string) error {
 
 func (lic *LicenseData) CheckExpiration() error {
 	if !lic.Info.Expiration.IsZero() && time.Now().After(lic.Info.Expiration) {
-		return ExpiredLicense
+		return ErrExpiredLicense
 	}
 	return nil
 }
@@ -143,7 +165,7 @@ func (lic *LicenseData) CheckExpiration() error {
 func (lic *LicenseData) CheckVersion(versions ...string) error {
 	if len(versions) > 0 && len(versions[0]) > 0 && len(lic.Info.Version) > 0 {
 		if !CheckVersion(versions[0], lic.Info.Version) {
-			return UnlicensedVersion
+			return ErrUnlicensedVersion
 		}
 	}
 	return nil
@@ -162,7 +184,7 @@ func (lic *LicenseData) CheckMAC() error {
 		}
 	}
 	if !valid {
-		return InvalidMachineID
+		return ErrInvalidMachineID
 	}
 	return nil
 }
@@ -173,7 +195,7 @@ func (lic *LicenseData) CheckDomain(domain string) error {
 	}
 
 	if !CheckDomain(domain, lic.Info.Domain) {
-		return InvalidDomain
+		return ErrInvalidDomain
 	}
 
 	return nil
@@ -213,5 +235,13 @@ func (lic *LicenseData) SaveLicenseToFile(licName string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(licName, jsonLic, 0644)
+	return os.WriteFile(licName, jsonLic, 0644)
+}
+
+func (lic *LicenseData) HasFeature(feature ...string) bool {
+	return lic.Info.HasFeature(feature...)
+}
+
+func (lic *LicenseData) HasAnyFeature(feature ...string) bool {
+	return lic.Info.HasAnyFeature(feature...)
 }

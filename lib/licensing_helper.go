@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -17,7 +16,7 @@ import (
 )
 
 func ReadLicense(r io.Reader) (*LicenseData, error) {
-	ldata, err := ioutil.ReadAll(r)
+	ldata, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -32,10 +31,10 @@ func ReadLicense(r io.Reader) (*LicenseData, error) {
 
 func ReadLicenseFromFile(licFile string) (*LicenseData, error) {
 	file, err := os.Open(licFile)
-	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	return ReadLicense(file)
 }
@@ -108,16 +107,16 @@ func MACAddresses(encoded bool) ([]string, error) {
 func CheckAndReturningLicense(licenseReader, pubKeyReader io.Reader, validator Validator, versions ...string) (*LicenseData, error) {
 	lic, err := ReadLicense(licenseReader)
 	if err != nil {
-		return lic, ErrorLicenseRead
+		return lic, ErrLicenseRead
 	}
 
 	publicKey, err := ReadPublicKey(pubKeyReader)
 	if err != nil {
-		return lic, ErrorPubKeyRead
+		return lic, ErrPubKeyRead
 	}
 
 	if err := lic.ValidateLicenseKeyWithPublicKey(publicKey); err != nil {
-		return lic, InvalidLicense // we have a key mismatch here meaning license data is tampered
+		return lic, ErrInvalidLicense // we have a key mismatch here meaning license data is tampered
 	}
 	lic.Info.SetValidator(validator)
 	return lic, lic.CheckLicenseInfo(versions...)
@@ -162,7 +161,7 @@ func BuildLicense(info *LicenseInfo, privKey string) (*LicenseData, error) {
 			return nil, err
 		}
 		if len(addrs) < 1 {
-			return nil, ErrorMachineID
+			return nil, ErrMachineID
 		}
 		info.MachineID = strings.ToUpper(com.Hash(addrs[0]))
 	}
